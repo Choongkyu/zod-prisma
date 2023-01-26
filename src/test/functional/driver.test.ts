@@ -1,5 +1,5 @@
 import glob from 'fast-glob'
-import execa from 'execa'
+import childProcess from 'child_process'
 import { getDMMF, getConfig } from '@prisma/sdk'
 import { readFile } from 'fs-extra'
 import path from 'path'
@@ -114,11 +114,19 @@ describe('Functional Tests', () => {
 	test.concurrent('Config Import', ftForDir('config-import'))
 
 	test.concurrent('Type Check Everything', async () => {
-		const typeCheckResults = await execa(
-			path.resolve(__dirname, '../../../node_modules/.bin/tsc'),
-			['--strict', '--noEmit', ...(await glob(`${__dirname}/*/expected/*.ts`))]
+		const typeCheckResults = childProcess.exec(
+			[
+				path.resolve(__dirname, '../../../node_modules/.bin/tsc'),
+				'--strict',
+				'--noEmit',
+				...(await glob(`${__dirname}/*/expected/*.ts`)),
+			].join(' '),
+			(err) => {
+				if (err) {
+					throw err
+				}
+				expect(typeCheckResults.exitCode).toBe(0)
+			}
 		)
-
-		expect(typeCheckResults.exitCode).toBe(0)
 	})
 })

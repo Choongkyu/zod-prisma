@@ -3,7 +3,7 @@ import { getZodConstructor } from '../types'
 
 describe('types Package', () => {
 	test('getZodConstructor', () => {
-		const field: DMMF.Field = {
+		let field: DMMF.Field = {
 			hasDefaultValue: false,
 			isGenerated: false,
 			isId: false,
@@ -18,9 +18,18 @@ describe('types Package', () => {
 			documentation: ['@zod.max(64)', '@zod.min(1)'].join('\n'),
 		}
 
-		const constructor = getZodConstructor(field)
+		let constructor = getZodConstructor(field)
 
-		expect(constructor).toBe('z.string().array().max(64).min(1).nullish()')
+		expect(constructor).toBe('z.string().array().max(64).min(1).nullable().default(null)')
+
+		field = {
+			...field,
+			documentation: undefined,
+			isList: false,
+			type: 'Boolean',
+		}
+		constructor = getZodConstructor(field)
+		expect(constructor).toBe('z.boolean().nullable().default(false)')
 	})
 
 	test('regression - unknown type', () => {
